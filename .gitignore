@@ -1,0 +1,11 @@
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+output/playwright/demo/.playwright-cli/
+.neon

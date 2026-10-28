@@ -1,0 +1,29 @@
+{
+	"name": "money-trace",
+	"private": true,
+	"type": "module",
+	"packageManager": "pnpm@11.25.0",
+	"engines": {
+		"node": ">=22.12.0"
+	},
+	"scripts": {
+		"dev": "pnpm --parallel --filter @money-trace/server --filter @money-trace/web dev",
+		"typecheck": "pnpm --recursive typecheck",
+		"test": "pnpm db:test:reset && pnpm --recursive test",
+		"db:test:reset": "node scripts/reset-test-db.mjs",
+		"build": "pnpm --recursive build",
+		"evidence:verify": "pnpm --filter @money-trace/server exec tsx src/incidents/verify-cli.ts",
+		"column:sandbox:smoke": "pnpm --filter @money-trace/server column:sandbox:smoke",
+		"verify": "pnpm typecheck && pnpm test && pnpm build && pnpm qlty",
+		"qlty": "qlty smells --all --include-tests && qlty check --all --no-fix"
+	},
+	"devDependencies": {
+		"@types/node": "^24.8.1",
+		"typescript": "^5.9.3"
+	},
+	"dependencies": {
+		"@neon/config": "^1.9.5",
+		"@neon/env": "^1.6.6",
+		"tsx": "^4.23.15"
+	}
+}
