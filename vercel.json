@@ -1,0 +1,16 @@
+{
+	"buildCommand": "pnpm --filter @money-trace/web build",
+	"installCommand": "pnpm install --frozen-lockfile",
+	"outputDirectory": "apps/web/dist",
+	"rewrites": [
+		{
+			"source": "/api/:path*",
+			"destination": "/api/index?__money_trace_path=:path*"
+		}
+	],
+	"functions": {
+		"api/**/*.ts": {
+			"includeFiles": "{apps/server/src/**,packages/domain/src/**}"
+		}
+	}
+}
