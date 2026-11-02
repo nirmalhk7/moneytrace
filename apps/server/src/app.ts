@@ -508,27 +508,32 @@ function registerReconciliationRoutes(
 	});
 }
 
-export async function startServer(): Promise<void> {
-	const pool = new (await import("pg")).Pool({
-		connectionString:
-			process.env.DATABASE_URL ??
-			"postgres://money_trace:money_trace@127.0.0.1:5432/money_trace",
-	});
+export async function startServer(): Promise<FastifyInstance> {
+	const { Pool } = await import("pg");
+	const databaseUrl =
+		process.env.DATABASE_URL ??
+		"postgres://money_trace:money_trace@127.0.0.1:5432/money_trace";
+	const directDatabaseUrl = process.env.DATABASE_URL_UNPOOLED ?? databaseUrl;
+	const pool = new Pool({ connectionString: databaseUrl });
+	const migrationPool =
+		directDatabaseUrl === databaseUrl
+			? pool
+			: new Pool({ connectionString: directDatabaseUrl });
 	const app = buildApp(pool, {
 		bankMode: process.env.BANK_MODE === "column" ? "column" : "replay",
 		columnApiKey: process.env.COLUMN_API_KEY,
 		columnBankAccountId: process.env.COLUMN_BANK_ACCOUNT_ID,
-		databaseUrl:
-			process.env.DATABASE_URL ??
-			"postgres://money_trace:money_trace@127.0.0.1:5432/money_trace",
+		databaseUrl: directDatabaseUrl,
+		migrationPool,
 	});
+	app.addHook("onClose", async () => pool.end());
 	const port = Number(process.env.PORT ?? "3001");
 	await app.listen({ host: "127.0.0.1", port });
 
 	const close = async (): Promise<void> => {
 		await app.close();
-		await pool.end();
 	};
 	process.once("SIGINT", () => void close());
 	process.once("SIGTERM", () => void close());
+	return app;
 }

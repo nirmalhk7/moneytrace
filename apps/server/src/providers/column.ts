@@ -41,9 +41,18 @@ function parseTransfer(payload: unknown): ColumnTransfer {
 
 function parseColumnError(payload: unknown, fallback: string): string {
 	if (!isObject(payload)) return fallback;
-	if (typeof payload.message === "string") return payload.message;
-	if (typeof payload.error === "string") return payload.error;
-	return fallback;
+	const message =
+		typeof payload.message === "string"
+			? payload.message
+			: typeof payload.error === "string"
+				? payload.error
+				: fallback;
+	const code = typeof payload.code === "string" ? ` [${payload.code}]` : "";
+	const reason =
+		isObject(payload.details) && typeof payload.details.reason === "string"
+			? ` ${payload.details.reason}`
+			: "";
+	return `${message}${code}${reason}`;
 }
 
 export async function createAchTransfer(

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { createAchTransfer, getAchTransfer } from "./column";
+import { ColumnApiError, createAchTransfer, getAchTransfer } from "./column";
 
 export interface ColumnSandboxSmokeConfig {
 	apiKey: string | undefined;
@@ -45,7 +45,17 @@ export async function verifyColumnSandboxConnection(
 			idempotencyKey,
 		},
 		fetcher,
-	);
+	).catch((error: unknown) => {
+		if (
+			error instanceof ColumnApiError &&
+			error.message.includes("payment_related_info")
+		) {
+			throw new ColumnApiError(
+				`${error.message} This check requests a prenote. Confirm ACH prenotes are enabled for this Column sandbox platform; payment_related_info would change it into a remittance.`,
+			);
+		}
+		throw error;
+	});
 	const lookedUp = await getAchTransfer(config.apiKey, submitted.id, fetcher);
 	if (lookedUp.id !== submitted.id) {
 		throw new Error("Column ACH lookup returned a different transfer ID.");

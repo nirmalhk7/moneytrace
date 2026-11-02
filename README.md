@@ -53,9 +53,10 @@ workspace; its replay ID is also run-specific.
 1. Create a job, review the fee and contractor allocation, save it, then approve
    it.
 2. In the payout queue, choose “Lost response” for a due obligation.
-   The attempt becomes unknown without a ledger posting. Choose “Recover same
-   attempt”; the original attempt receives its provider reference and one
-   balanced submission journal.
+   The attempt becomes unknown without a ledger posting. Available cash falls
+   because the amount stays reserved while the provider outcome is unknown; bank
+   cash and the ledger stay unchanged. Choose “Recover same attempt”; the original
+   attempt receives its provider reference and one balanced submission journal.
 3. In “Can you break this payout?”, run each isolated scenario. Download the
    evidence JSON and check it with `pnpm evidence:verify <file>`. Runs use a
    temporary PostgreSQL schema, then preserve only the replay-labeled evidence
@@ -137,7 +138,11 @@ funds, set `COLUMN_SMOKE_COUNTERPARTY_ID` to a sandbox counterparty and run
 prefix, creates a zero-dollar ACH prenote with a fresh idempotency key, then
 retrieves that transfer by ID. Column must have ACH prenotes enabled for the
 sandbox platform. Sandbox transfers persist in Column; the check does not
-settle or delete its prenote. Column documents zero-dollar prenotes in its
+settle or delete its prenote. If Column rejects it with a missing
+`payment_related_info` reason, confirm ACH prenotes are enabled for the sandbox
+platform. Adding that field changes the request into a zero-dollar remittance;
+the smoke check intentionally does not make that substitution. Column documents
+zero-dollar prenotes in its
 [ACH transfer API](https://docs.column.com/api/ach-transfer/create-an-ach-transfer/)
 and sandbox behavior in its [testing guide](https://docs.column.com/guides/sandbox-and-testing).
 

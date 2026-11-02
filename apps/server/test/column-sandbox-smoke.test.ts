@@ -54,6 +54,36 @@ describe("Column sandbox connection smoke check", () => {
 		expect(lookupInit?.method).toBe("GET");
 	});
 
+	it("explains a rejected prenote without retrying as a remittance", async () => {
+		const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+			new Response(
+				JSON.stringify({
+					code: "invalid_field_value",
+					message: "Invalid argument found.",
+					details: {
+						reason:
+							"Required field 'payment_related_info' is missing for zero-dollar remittance entries.",
+					},
+				}),
+				{ status: 400 },
+			),
+		);
+
+		await expect(
+			verifyColumnSandboxConnection(
+				{
+					apiKey: "test_sandbox_key",
+					bankAccountId: "bacc_smoke",
+					counterpartyId: "cpty_smoke",
+				},
+				fetcher,
+			),
+		).rejects.toThrow(
+			"Invalid argument found. [invalid_field_value] Required field 'payment_related_info' is missing for zero-dollar remittance entries. This check requests a prenote. Confirm ACH prenotes are enabled for this Column sandbox platform; payment_related_info would change it into a remittance.",
+		);
+		expect(fetcher).toHaveBeenCalledTimes(1);
+	});
+
 	it("refuses live keys before making a provider request", async () => {
 		const fetcher = vi.fn<typeof fetch>();
 
